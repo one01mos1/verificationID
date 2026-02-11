@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Verification System</title>
+    <link rel="stylesheet" href="../Frontend/public/css/styles.css">
+    <script src="app.js"></script>
+    <!--<script src="../Frontend/public/js/face-detector.js"></script>
+    <script src="../Frontend/public/js/mrzextractor.js"></script>
+    <script src="../Frontend/public/js/camera.js"></script>-->
+
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Identity Verification System</h1>
+            <p>Secure registration with biometric verification</p>
+        </div>
+
+        <div class="content">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">ID Back (MRZ)</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">ID Front (Portrait)</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Live Selfie</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Verification</div>
+                </div>
+            </div>
+
+            <!-- Phase A: Back-of-ID Scanning -->
+            <div id="phase-back" class="phase active">
+                <h2>Step 1: Scan ID Back (MRZ)</h2>
+                <p style="margin-bottom: 20px; color: #666;">Position the back of your ID card within the frame</p>
+
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <div class="camera-overlay">
+                        <div class="overlay-text">Align MRZ lines here</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-primary" id="captureBack">📷 Capture MRZ</button>
+                </div>
+
+                <div id="mrzResult" style="display: none;"></div>
+            </div>
+
+            <!-- Phase B: Front-of-ID Scanning -->
+            <div id="phase-front" class="phase">
+                <h2>Step 2: Scan ID Front (Portrait)</h2>
+                <p style="margin-bottom: 20px; color: #666;">Position the front of your ID card to capture the portrait</p>
+
+                <div class="camera-container">
+                    <video id="video-front" autoplay playsinline></video>
+                    <canvas id="canvas-front"></canvas>
+                    <div class="camera-overlay">
+                        <div class="overlay-text">Align portrait here</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-secondary" id="backToMRZ">← Back</button>
+                    <button class="btn-primary" id="captureFront">📷 Capture Portrait</button>
+                </div>
+
+                <div id="portraitResult" style="display: none;"></div>
+            </div>
+
+            <!-- Phase C: Live Selfie -->
+            <div id="phase-selfie" class="phase">
+                <h2>Step 3: Live Selfie Verification</h2>
+
+                <div class="liveness-instruction">
+                    <h3>📸 Liveness Check Instructions</h3>
+                    <ul>
+                        <li>Look directly at the camera</li>
+                        <li>Ensure your face is well-lit</li>
+                        <li>Keep your face within the frame</li>
+                        <li>Blink naturally when prompted</li>
+                    </ul>
+                </div>
+
+                <div class="camera-container">
+                    <video id="video-selfie" autoplay playsinline></video>
+                    <canvas id="canvas-selfie"></canvas>
+                    <div class="camera-overlay" style="border-radius: 50%; width: 60%; height: 80%;">
+                        <div class="overlay-text">Position your face here</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-secondary" id="backToFront">← Back</button>
+                    <button class="btn-primary" id="captureSelfie">📸 Take Selfie</button>
+                </div>
+
+                <div id="selfieResult" style="display: none;"></div>
+            </div>
+
+            <!-- Phase D: Form & Verification -->
+            <div id="phase-verification" class="phase">
+                <h2>Step 4: Review & Submit</h2>
+
+                <div class="preview-images" id="previewImages"></div>
+
+                <div class="result-card" id="extractedData"></div>
+
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="firstName" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="lastName" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>ID Number</label>
+                        <input type="text" id="idNumber" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="text" id="dateOfBirth" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <input type="text" id="gender" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Nationality</label>
+                        <input type="text" id="nationality" disabled>
+                    </div>
+
+                    <div class="controls">
+                        <button type="button" class="btn-secondary" id="backToSelfie">← Back</button>
+                        <button type="button" class="btn-success" id="submitBtn">✓ Complete Registration</button>
+                    </div>
+                </form>
+
+                <div id="finalResult" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://docs.opencv.org/4.8.0/opencv.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

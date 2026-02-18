@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Verification System</title>
+
+    <!-- Font Awesome 6.5.1 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Initialization overlay - shown while dependencies load -->
+    <div id="initOverlay" class="init-overlay">
+        <div class="init-overlay-content">
+            <div class="init-spinner"></div>
+            <h2>Identity Verification System</h2>
+            <p id="initStatus">Loading dependencies...</p>
+            <div class="init-progress">
+                <div class="init-progress-fill" id="initProgressFill"></div>
+            </div>
+            <div class="init-checklist" id="initChecklist">
+                <div class="init-check-item" id="initCheckOpencv">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> OpenCV (image processing)
+                </div>
+                <div class="init-check-item" id="initCheckTesseract">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Tesseract (document reading)
+                </div>
+                <div class="init-check-item" id="initCheckFaceapi">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Face detection models
+                </div>
+                <div class="init-check-item" id="initCheckCamera">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Camera
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fa-solid fa-shield-halved"></i> Identity Verification System</h1>
+            <p>Secure registration with biometric verification</p>
+        </div>
+
+        <div class="content">
+            <!-- Step Indicator -->
+            <div class="step-indicator" data-progress="1">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">ID Back (MRZ)</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">ID Front (Portrait)</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Live Selfie</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Verification</div>
+                </div>
+            </div>
+
+            <main aria-live="polite">
+                <!-- Phase A: Back-of-ID Scanning -->
+                <div id="phase-back" class="phase active">
+                    <h2>Step 1: Scan ID Back (MRZ)</h2>
+                    <p class="phase-description">Position the back of your ID card within the frame</p>
+
+                    <div class="camera-container">
+                        <div class="camera-placeholder">
+                            <div class="spinner"></div>
+                            <p>Starting camera...</p>
+                        </div>
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                        <div class="camera-overlay">
+                            <div class="overlay-text">Align MRZ lines here</div>
+                        </div>
+                        <div class="camera-flash"></div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn-primary" id="captureBack"><i class="fa-solid fa-camera"></i> Capture MRZ</button>
+                    </div>
+
+                    <div id="mrzResult" class="hidden" aria-live="polite"></div>
+                </div>
+
+                <!-- Phase B: Front-of-ID Scanning -->
+                <div id="phase-front" class="phase">
+                    <h2>Step 2: Scan ID Front (Portrait)</h2>
+                    <p class="phase-description">Position the front of your ID card to capture the portrait</p>
+
+                    <div class="camera-container">
+                        <div class="camera-placeholder">
+                            <div class="spinner"></div>
+                            <p>Starting camera...</p>
+                        </div>
+                        <video id="video-front" autoplay playsinline></video>
+                        <canvas id="canvas-front"></canvas>
+                        <div class="camera-overlay">
+                            <div class="overlay-text">Align portrait here</div>
+                        </div>
+                        <div class="camera-flash"></div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn-secondary" id="backToMRZ"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn-primary" id="captureFront"><i class="fa-solid fa-camera"></i> Capture Portrait</button>
+                    </div>
+
+                    <div id="portraitResult" class="hidden" aria-live="polite"></div>
+                </div>
+
+                <!-- Phase C: Live Selfie -->
+                <div id="phase-selfie" class="phase">
+                    <h2>Step 3: Live Selfie Verification</h2>
+
+                    <div class="liveness-instruction">
+                        <h3><i class="fa-solid fa-camera"></i> Liveness Check Instructions</h3>
+                        <ul>
+                            <li>Look directly at the camera</li>
+                            <li>Ensure your face is well-lit</li>
+                            <li>Keep your face within the frame</li>
+                            <li>Blink naturally when prompted</li>
+                        </ul>
+                    </div>
+
+                    <div class="camera-container">
+                        <div class="camera-placeholder">
+                            <div class="spinner"></div>
+                            <p>Starting camera...</p>
+                        </div>
+                        <video id="video-selfie" autoplay playsinline></video>
+                        <canvas id="canvas-selfie"></canvas>
+                        <div class="camera-overlay camera-overlay--circular">
+                            <div class="overlay-text">Position your face here</div>
+                        </div>
+                        <div class="camera-flash"></div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn-secondary" id="backToFront"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn-primary" id="captureSelfie"><i class="fa-solid fa-camera"></i> Take Selfie</button>
+                    </div>
+
+                    <div id="selfieResult" class="hidden" aria-live="polite"></div>
+                </div>
+
+                <!-- Phase D: Form & Verification -->
+                <div id="phase-verification" class="phase">
+                    <h2>Step 4: Review & Submit</h2>
+
+                    <div class="preview-images" id="previewImages"></div>
+
+                    <div class="result-card" id="extractedData"></div>
+
+                    <form id="registrationForm">
+                        <p class="form-helper-text">Fields are pre-filled from your ID. You may edit them if needed.</p>
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="idNumber">ID Number</label>
+                            <input type="text" id="idNumber" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <input type="text" id="dateOfBirth" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <input type="text" id="gender" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="nationality">Nationality</label>
+                            <input type="text" id="nationality" readonly>
+                        </div>
+
+                        <div class="controls">
+                            <button type="button" class="btn-secondary" id="backToSelfie"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                            <button type="button" class="btn-success" id="submitBtn"><i class="fa-solid fa-circle-check"></i> Complete Registration</button>
+                        </div>
+                    </form>
+
+                    <div id="finalResult" class="hidden" aria-live="polite"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- OpenCV initialization callback BEFORE loading opencv.js -->
+    <script>
+        var Module = {
+            onRuntimeInitialized: function() {
+                console.log('OpenCV.js runtime initialized');
+                window.__opencvReady = true;
+                window.dispatchEvent(new CustomEvent('opencv-ready'));
+            }
+        };
+    </script>
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"
+        onload="var t=document.getElementById('initCheckTesseract');if(t){t.classList.add('done');var i=t.querySelector('i');if(i)i.className='fa-solid fa-circle-check';}document.getElementById('initStatus').textContent='Tesseract loaded...';">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+
+    <script src="app.js"></script>
+</body>
+</html>
